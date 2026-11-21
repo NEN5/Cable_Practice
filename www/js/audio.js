@@ -4,7 +4,7 @@ let AC=null,MG=null,DL=null,NB=null;
 function audio(){return cfg.snd?actx():null}
 function actx(){
  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();
-  MG=AC.createGain();MG.gain.value=.7;const cp=AC.createDynamicsCompressor();MG.connect(cp);cp.connect(AC.destination);
+  MG=AC.createGain();MG.gain.value=cfg.sfx;const cp=AC.createDynamicsCompressor();MG.connect(cp);cp.connect(AC.destination);
   DL=AC.createDelay(.5);DL.delayTime.value=.19;const fb=AC.createGain();fb.gain.value=.38;const wt=AC.createGain();wt.gain.value=.5;DL.connect(fb);fb.connect(DL);DL.connect(wt);wt.connect(MG);
   NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){AC=null;return null}}
  if(AC.state==='suspended')AC.resume();return AC}
