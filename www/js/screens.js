@@ -5,7 +5,12 @@ function setStats(a){$('stats').innerHTML=a.map(([l,v])=>`<div class="stat"><sma
 function showMenu(mode,nb){lastMode=mode;const over=mode==='over';
  $('ttl').textContent=over?'Run over':'Cable Master';$('sub').hidden=over;$('nb').hidden=!nb;
  setStats(over?[['Score',S.score],['Best',S.best],['Kills',S.kills]]:[['Best score',S.best],['Max streak',S.ms],['Coins',S.coins]]);
- $('start').textContent=over?'Play again':'Play';$('overlay').hidden=false}
+ $('start').textContent=over?'Play again':'Play';$('overlay').hidden=false;fitCard()}
+// Scale the card down if it is still taller or wider than the stage (small phones, odd preview sizes).
+function fitCard(){const o=$('overlay'),c=$('card');if(o.hidden)return;c.style.transform='';c.style.marginBottom='';
+ const cs=getComputedStyle(o),aw=o.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),ah=o.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+ const k=Math.min(1,aw/c.offsetWidth,ah/c.offsetHeight);if(k<.999){c.style.transform='scale('+k+')';c.style.marginBottom=(-c.offsetHeight*(1-k))+'px'}}
+addEventListener('resize',fitCard);
 let pv=[];
 const COIN='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#e2b04a"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#a97c1f" stroke-width="1.6"/></svg>';
 function renderShop(){const g=$('sgrid');g.innerHTML='';pv=[];$('scoins').textContent=S.coins;
