@@ -25,10 +25,18 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
  ctx.font='600 17px -apple-system,Segoe UI,Roboto,system-ui,sans-serif';ctx.textAlign='center';fx.forEach(f=>{ctx.globalAlpha=1-f.t/.9;ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,f.y-f.t*40)});ctx.globalAlpha=1}
 function aimDir(){return aim.drag?[aim.dx,aim.dy]:(aim.kind==='cable'?autoDir():norm(T.x-P.x,T.y-P.y))}
 
+// HUD: only touch the DOM when a value actually changed (the WebView re-styles the page on every write).
+const hv={},cabCd=$('cab').querySelector('.cd'),ultCd=$('ult').querySelector('.cd');
+function setT(id,v){if(hv[id]!==v){hv[id]=v;$(id).textContent=v}}
+function setS(id,p,v){const el=typeof id==='string'?$(id):id,k=(typeof id==='string'?id:id.parentNode.id)+p;if(hv[k]!==v){hv[k]=v;el.style[p]=v}}
 let lc=S.coins;
 function hud(){if(S.coins!==lc){lc=S.coins;const el=$('coinui');el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
- $('mx').textContent=S.ms;$('bs').textContent=Math.max(S.best,S.score);$('sc').textContent=S.score;$('stk').textContent=streak?'x'+streak:'0';$('cn').textContent=S.coins;
- const h=php==null?CFG.hp:php;$('fill').style.width=h/CFG.hp*100+'%';$('fill').style.background=h<30?'var(--danger)':'var(--ok)';$('enT').textContent=Math.ceil(h);
- $('cab').querySelector('.cd').style.height='0%';$('ult').classList.toggle('low',cdU>0);$('ult').querySelector('.cd').style.height=(cdU/(CFG.cut.cd||1)*100)+'%'}
+ setT('mx',S.ms);setT('bs',Math.max(S.best,S.score));setT('sc',S.score);setT('stk',streak?'x'+streak:'0');setT('cn',S.coins);
+ const h=php==null?CFG.hp:php;setS('fill','width',Math.round(h/CFG.hp*200)/2+'%');setS('fill','background',h<30?'var(--danger)':'var(--ok)');setT('enT',Math.ceil(h));
+ setS(cabCd,'height','0%');const low=cdU>0;if(hv.low!==low){hv.low=low;$('ult').classList.toggle('low',low)}setS(ultCd,'height',Math.round(cdU/(CFG.cut.cd||1)*200)/2+'%')}
 let last=performance.now();
-function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt);draw();hud();if(!$('shop').hidden)shopDraw();requestAnimationFrame(loop)}
+let fpsA=0,fpsN=0;
+function fpsTick(d){fpsA+=d;fpsN++;if(fpsA>=.5){$('fps').textContent=Math.round(fpsN/fpsA)+' FPS \u00b7 '+(fpsA/fpsN*1000).toFixed(1)+' ms';fpsA=0;fpsN=0}}
+function loop(t){const raw=Math.max(0,(t-last)/1000),dt=Math.min(.05,raw);last=t;
+ const n=Math.max(1,Math.ceil(dt*120-1e-6));for(let i=0;i<n;i++)update(dt/n);
+ draw();hud();if(!$('shop').hidden)shopDraw();if(cfg.fps&&raw>0)fpsTick(raw);requestAnimationFrame(loop)}
