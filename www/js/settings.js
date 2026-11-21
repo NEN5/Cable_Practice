@@ -1,6 +1,6 @@
 // Settings, saved config, Edit UI
 // ---- Settings (saved in localStorage) ----
-const DEF={cutcd:25,hook:2000,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,snd:true,music:.5,noobs:false,vib:false,noen:false,en:1,op:{joy:1,en:1,cab:1,ult:1},pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
+const DEF={cutcd:25,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,snd:true,sfx:.7,music:.5,noobs:false,vib:false,noen:false,en:1,op:{joy:1,en:1,cab:1,ult:1},pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
 let cfg=JSON.parse(JSON.stringify(DEF));
 try{const o=JSON.parse(localStorage.getItem('fannySettings')||'null');
  if(o&&typeof o==='object'){for(const k in DEF)if(k!=='pos'&&k!=='op'&&typeof o[k]===typeof DEF[k])cfg[k]=o[k];
@@ -9,7 +9,7 @@ try{const o=JSON.parse(localStorage.getItem('fannySettings')||'null');
 const saveCfg=()=>{try{localStorage.setItem('fannySettings',JSON.stringify(cfg))}catch(e){}};
 const UI={joy:$('joy'),en:$('en'),cab:$('cab'),ult:$('ult')};
 function place(){const w=innerWidth,h=innerHeight;for(const k in UI){const p=cfg.pos[k];let t=(p[0]||p[1])?`translate(${p[0]*w}px,${p[1]*h}px)`:'';if(k==='en')t+=` scale(${cfg.en})`;UI[k].style.transform=t;UI[k].style.opacity=cfg.op[k]}}
-function applyCfg(){musicSync();CFG.cable.cd=0;CFG.cut.cd=cfg.cutcd;CFG.cable.hook=cfg.hook;CFG.cable.speed=cfg.pull;
+function applyCfg(){musicSync();CFG.cable.cd=0;CFG.cut.cd=cfg.cutcd;CFG.cable.speed=cfg.pull;if(MG)MG.gain.value=cfg.sfx;
  const rs=document.documentElement.style;rs.setProperty('--jk',cfg.joy);rs.setProperty('--ck',cfg.cab);rs.setProperty('--uk',cfg.ult);
  document.body.classList.toggle('ov',cfg.ov);cdC=0;cdU=Math.min(cdU,cfg.cutcd);place();resize()}
 // Zoom above 100% follows the player; at 100% or below the whole arena is shown.
@@ -19,8 +19,8 @@ function view(){const base=Math.min(cw/CFG.W,ch/CFG.H)*.97;sc=base*cfg.zoom;cons
 const pct=v=>Math.round(v*100)+'%';
 const FIELDS=[
  ['cutcd','Cut Throat cooldown',0,60,1,v=>v+' s'],
- ['hook','Cable hook (anchor) speed',500,6000,100,v=>String(v)],
  ['pull','Cable pull speed',300,1500,25,v=>String(v)],
+ ['sfx','Sound effects volume',0,1,.05,pct],
  ['music','Music volume',0,1,.05,pct],
  ['zoom','Zoom',.5,2,.05,pct]];
 const syncs=[];
