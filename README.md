@@ -5,11 +5,11 @@ The game is fully offline (no fonts or scripts loaded from the internet). GitHub
 ## Build the APK (once)
 1. Create a new GitHub repo (private is fine).
 2. Upload everything in this folder, keeping the structure:
-   - `www/index.html`
+   - `www/` (the whole folder: `index.html`, `css/`, `js/`, `assets/`)
    - `package.json`
    - `capacitor.config.json`
    - `.gitignore`
-   - `.github/workflows/build-apk.yml`
+   - `.github/workflows/main.yml`
 3. Open the repo's **Actions** tab. The "Build APK" workflow runs on push (or press **Run workflow**).
 4. After about 5-8 minutes, open the finished run and download the **fanny-trainer-apk** artifact (a zip containing `app-debug.apk`).
 
@@ -19,7 +19,11 @@ The game is fully offline (no fonts or scripts loaded from the internet). GitHub
 3. Launch "Fanny Trainer". It opens in landscape, fullscreen, no internet needed.
 
 ## Updating the game
-Replace `www/index.html` in the repo and commit. The workflow rebuilds a new APK.
+Edit the files under `www/` in the repo and commit. The workflow rebuilds a new APK.
+
+Code layout (plain `<script>` tags, loaded in this order by `www/index.html`):
+`core.js` config and state, `skins.js` shop skins, `audio.js` sound effects and music, `settings.js` settings and Edit UI, `world.js` arena, `screens.js` menu/shop/game over, `combat.js` cables and update loop, `render.js` drawing and main loop, `input.js` touch and keyboard, `main.js` start-up. Background music is `www/assets/bgm.mp3`.
+To test in a browser, serve `www/` over http (for example `python -m http.server` inside `www/`).
 
 ## Notes
 - This is a **debug** APK: fine for personal use, not for the Play Store (that needs a signed release build).
