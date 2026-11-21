@@ -1,0 +1,9 @@
+{
+  "appId": "com.nen.fannytrainer",
+  "appName": "Fanny Trainer",
+  "webDir": "www",
+  "backgroundColor": "#0d1320",
+  "android": {
+    "allowMixedContent": false
+  }
+}
