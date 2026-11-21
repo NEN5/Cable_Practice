@@ -1,6 +1,6 @@
 // Settings, saved config, Edit UI
 // ---- Settings (saved in localStorage) ----
-const DEF={cutcd:25,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,snd:true,sfx:.7,music:.5,noobs:false,vib:false,noen:false,en:1,op:{joy:1,en:1,cab:1,ult:1},pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
+const DEF={cutcd:25,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,fps:false,snd:true,sfx:.7,music:.5,noobs:false,vib:false,noen:false,en:1,op:{joy:1,en:1,cab:1,ult:1},pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
 let cfg=JSON.parse(JSON.stringify(DEF));
 try{const o=JSON.parse(localStorage.getItem('fannySettings')||'null');
  if(o&&typeof o==='object'){for(const k in DEF)if(k!=='pos'&&k!=='op'&&typeof o[k]===typeof DEF[k])cfg[k]=o[k];
@@ -9,7 +9,7 @@ try{const o=JSON.parse(localStorage.getItem('fannySettings')||'null');
 const saveCfg=()=>{try{localStorage.setItem('fannySettings',JSON.stringify(cfg))}catch(e){}};
 const UI={joy:$('joy'),en:$('en'),cab:$('cab'),ult:$('ult')};
 function place(){const w=innerWidth,h=innerHeight;for(const k in UI){const p=cfg.pos[k];let t=(p[0]||p[1])?`translate(${p[0]*w}px,${p[1]*h}px)`:'';if(k==='en')t+=` scale(${cfg.en})`;UI[k].style.transform=t;UI[k].style.opacity=cfg.op[k]}}
-function applyCfg(){musicSync();CFG.cable.cd=0;CFG.cut.cd=cfg.cutcd;CFG.cable.speed=cfg.pull;if(MG)MG.gain.value=cfg.sfx;
+function applyCfg(){musicSync();CFG.cable.cd=0;CFG.cut.cd=cfg.cutcd;CFG.cable.speed=cfg.pull;if(MG)MG.gain.value=cfg.sfx;$('fps').hidden=!cfg.fps;
  const rs=document.documentElement.style;rs.setProperty('--jk',cfg.joy);rs.setProperty('--ck',cfg.cab);rs.setProperty('--uk',cfg.ult);
  document.body.classList.toggle('ov',cfg.ov);cdC=0;cdU=Math.min(cdU,cfg.cutcd);place();resize()}
 // Zoom above 100% follows the player; at 100% or below the whole arena is shown.
@@ -37,14 +37,15 @@ FIELDS.forEach(([k,label,min,max,step,fmt])=>{const row=document.createElement('
  trk.addEventListener('pointerup',e=>{if(g&&e.pointerId===g.id&&!g.drag&&Math.hypot(e.clientX-g.x,e.clientY-g.y)<8)setFrom(e.clientX);g=null});
  trk.addEventListener('pointercancel',()=>{g=null});
  $('rows').appendChild(row)});
-$('sndchk').checked=cfg.snd;$('ovchk').checked=cfg.ov;$('noobchk').checked=cfg.noobs;$('vibchk').checked=cfg.vib;$('noenchk').checked=cfg.noen;
+$('sndchk').checked=cfg.snd;$('ovchk').checked=cfg.ov;$('noobchk').checked=cfg.noobs;$('vibchk').checked=cfg.vib;$('fpschk').checked=cfg.fps;$('noenchk').checked=cfg.noen;
 let editing=false;
 const syncPause=()=>{S.paused=!$('sheet').hidden||editing||!$('shop').hidden};
 $('gear').onclick=()=>{$('sheet').hidden=!$('sheet').hidden;syncPause()};
 $('sclose').onclick=()=>{$('sheet').hidden=true;syncPause()};
 $('noobchk').onchange=e=>{cfg.noobs=e.target.checked;saveCfg();if(S.phase==='play'){makeObs();resolve(P,P.r);spawnT()}};
 $('vibchk').onchange=e=>{cfg.vib=e.target.checked;saveCfg();if(cfg.vib)buzz(30)};
-$('noenchk').onchange=e=>{cfg.noen=e.target.checked;saveCfg();if(S.phase==='play'){makeHaz();proj=[];if(cfg.noen&&T.shoots)spawnT()}};
+$('fpschk').onchange=e=>{cfg.fps=e.target.checked;saveCfg();applyCfg()};
+$('noenchk').onchange=e=>{cfg.noen=e.target.checked;saveCfg();if(S.phase==='play')makeHaz()};
 $('ovchk').onchange=e=>{cfg.ov=e.target.checked;applyCfg();saveCfg()};
 $('sndchk').onchange=e=>{cfg.snd=e.target.checked;saveCfg();if(cfg.snd)sfx('cast',SK.eq)};
 $('sedit').onclick=()=>{$('sheet').hidden=true;editing=true;document.body.classList.add('edit');$('editbar').hidden=false;syncPause()};
@@ -66,7 +67,7 @@ function selCtl(k){sel=k;for(const j in UI)UI[j].classList.toggle('sel',j===k);$
  slider(rows,'Size',.6,1.8,.05,()=>cfg[k],v=>{cfg[k]=v;applyCfg()},pct);
  slider(rows,'Opacity',.2,1,.05,()=>cfg.op[k],v=>{cfg.op[k]=v;applyCfg()},pct)}
 $('ereset').onclick=()=>{if(!sel)return;cfg[sel]=1;cfg.op[sel]=1;cfg.pos[sel]=[0,0];applyCfg();saveCfg();selCtl(sel)};
-$('sall').onclick=()=>{cfg=JSON.parse(JSON.stringify(DEF));syncs.forEach(f=>f());$('ovchk').checked=false;$('noobchk').checked=false;$('vibchk').checked=false;$('noenchk').checked=false;$('sndchk').checked=true;applyCfg();saveCfg();if(S.phase==='play'){makeObs();resolve(P,P.r);makeHaz();proj=[];spawnT()}};
+$('sall').onclick=()=>{cfg=JSON.parse(JSON.stringify(DEF));syncs.forEach(f=>f());$('ovchk').checked=false;$('noobchk').checked=false;$('vibchk').checked=false;$('fpschk').checked=false;$('noenchk').checked=false;$('sndchk').checked=true;applyCfg();saveCfg();if(S.phase==='play'){makeObs();resolve(P,P.r);makeHaz();proj=[];spawnT()}};
 // Layout editing: drag any control; positions are stored as fractions of the screen.
 Object.entries(UI).forEach(([k,el])=>{el.classList.add('ed');let id=null,sx=0,sy=0,p0=[0,0],r0=null;
  el.addEventListener('pointerdown',e=>{if(!editing)return;selCtl(k);e.stopImmediatePropagation();e.preventDefault();id=e.pointerId;el.setPointerCapture(id);
