@@ -1,7 +1,7 @@
 // Config, canvas, game state, rarity tiers, small helpers
 // Matched to Fanny where sources exist: move speed 265, Steel Cable cost 14 (1 less per recast within 5s, no cooldown), Cut Throat 12 energy and 25s cooldown. Cable speed, range and energy regen are estimates.
 const CFG={W:1000,H:600,R:14,speed:265,eMax:100,regen:8,
- cable:{cost:14,step:1,window:5,range:1300,speed:700,hook:2000,cd:0,boost:.69,more:.33,dummy:3},
+ cable:{cost:14,step:1,window:5,range:1300,speed:700,hook:6000,cd:0,boost:.69,more:.33,dummy:3},
  cut:{cost:12,range:240,cd:25,speed:1500,dmg:70,mark:.3},
  t1:{cost:8,cd:1.5,refund:6,r:110},
  time:60,hp:100,comboWindow:2.5};
