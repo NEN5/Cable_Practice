@@ -17,12 +17,16 @@
  </div>
  <div id="stage"><canvas id="cv"></canvas>
   <div id="overlay"><div id="card">
-   <h1 id="ttl">Cable Master</h1>
-   <p id="sub">Swing, slash, repeat.</p>
-   <span id="nb" hidden>New best</span>
-   <div id="stats"></div>
-   <button id="start" class="btn pri">Play</button>
-   <button id="shopbtn" class="btn sec">Shop</button>
+   <div id="cm">
+    <h1 id="ttl">Cable Master</h1>
+    <p id="sub">Swing, slash, repeat.</p>
+    <span id="nb" hidden>New best</span>
+    <div id="stats"></div>
+   </div>
+   <div id="cb">
+    <button id="start" class="btn pri">Play</button>
+    <button id="shopbtn" class="btn sec">Shop</button>
+   </div>
   </div></div>
  </div>
  <div id="pad">
@@ -43,7 +47,8 @@
  <div id="rows"></div>
  <label class="row chk"><input type="checkbox" id="sndchk"><span>Sound effects</span></label>
  <label class="row chk"><input type="checkbox" id="noobchk"><span>Remove obstacles (only the arena walls remain)</span></label>
- <label class="row chk"><input type="checkbox" id="noenchk"><span>Remove enemies (no red drifters, no shooting targets)</span></label>
+ <label class="row chk"><input type="checkbox" id="noenchk"><span>Remove enemies (no red drifters)</span></label>
+ <label class="row chk"><input type="checkbox" id="fpschk"><span>Show FPS counter</span></label>
  <label class="row chk"><input type="checkbox" id="vibchk"><span>Vibration on cable and kill (off by default)</span></label>
  <label class="row chk"><input type="checkbox" id="ovchk"><span>Overlay controls on the arena (hides the bottom bar)</span></label>
  <div class="btns"><button id="sedit">Edit UI</button><button id="sall">Reset all</button></div>
@@ -51,7 +56,16 @@
 </div>
 <div id="editbar" hidden><span>Drag a control to move it, tap it to adjust</span><button id="edone">Done</button></div>
 <div id="epanel" hidden><div class="eh"><b id="ename"></b><button id="ereset">Reset</button></div><div id="erows"></div></div>
+<div id="fps" hidden></div>
+<div id="splash" aria-hidden="true">
+ <div class="sp-in">
+  <div class="sp-by">made by</div>
+  <div class="sp-word"><span>N</span><span>E</span><span>N</span></div>
+  <svg class="sp-cable" viewBox="0 0 240 24" aria-hidden="true"><path d="M4 12H222"/><circle cx="230" cy="12" r="6"/></svg>
+ </div>
+</div>
 <audio id="bgm" loop preload="auto" src="assets/bgm.mp3"></audio>
+<script src="js/splash.js"></script>
 <script src="js/core.js"></script>
 <script src="js/skins.js"></script>
 <script src="js/audio.js"></script>
