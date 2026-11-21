@@ -46,11 +46,14 @@ body.ov #pad>*{pointer-events:auto}
 body.ov #skills{pointer-events:none}
 body.ov #skills>*{pointer-events:auto}
 body.edit .ed{outline:2px dashed var(--gold);outline-offset:3px;cursor:move}
-#sheet{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 44px);left:50%;transform:translateX(-50%);width:min(340px,94vw);max-height:calc(100% - 56px);overflow-y:auto;touch-action:pan-y;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:16px;box-sizing:border-box}
-#sheet .sh{display:flex;justify-content:space-between;align-items:center;font-size:20px}
+#sheet{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 44px);left:50%;transform:translateX(-50%);width:min(340px,94vw);max-height:calc(100vh - 56px);max-height:calc(100dvh - 56px);overflow-y:scroll;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:16px;box-sizing:border-box}
+#sheet *{touch-action:pan-y}
+#sheet::-webkit-scrollbar{width:8px}#sheet::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
+#sheet .sh{position:sticky;top:-10px;z-index:2;background:var(--panel);padding:4px 0;margin-top:-4px;display:flex;justify-content:space-between;align-items:center;font-size:20px}
 .row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:8px 0;font-size:15px}
 .row output{color:var(--accent);font-weight:700}
-.row input[type=range]{grid-column:1/3;width:100%;margin:2px 0;accent-color:var(--accent)}
+.row .trk{grid-column:1/3;padding:8px 0;cursor:pointer}
+.row input[type=range]{display:block;width:100%;margin:0;pointer-events:none;accent-color:var(--accent)}
 .row.chk{display:flex;gap:8px;align-items:center}
 .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .btns button,#sclose,#edone{padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--grid);font-size:15px}
@@ -58,12 +61,12 @@ body.edit .ed{outline:2px dashed var(--gold);outline-offset:3px;cursor:move}
 #editbar{position:fixed;z-index:61;top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--gold);border-radius:10px;padding:6px 12px;font-size:15px;white-space:nowrap}
 </style></head><body>
 <div id="app">
- <div id="hud"><span><small>Score</small><b id="sc">0</b></span><button id="gear" aria-label="Settings">&#9881;</button></div>
+ <div id="hud"><span><small>Score</small><b id="sc">0</b></span><span><small>Streak</small><b id="stk">0</b></span><button id="gear" aria-label="Settings">&#9881;</button></div>
  <div id="stage"><canvas id="cv"></canvas>
   <div id="overlay"><div id="card">
    <h1>Fanny trainer</h1>
    <p id="result" hidden></p>
-   <p>Touch the target to score a point. Steel Cables fly through targets and anchor on walls. Cast two cables to steer between them; older cables are ignored. Avoid the red drifters. Each target is randomly still or moving.</p>
+   <p>Touch the target to score a point. Steel Cables fly through targets and anchor on walls. Cast two cables to steer between them; older cables are ignored. Avoid the red drifters. Targets have HP: gold 1 hit, orange 3, purple 5. Touching hits once, Cut Throat hits hard. Chain kills for a streak bonus; it resets if you stop, hit a wall, get hit, or have no active cable. Each target is randomly still or moving.</p>
    <button id="start">Start</button>
    <p style="font-size:14px">Move: joystick or WASD. Tap a skill to auto-aim, or hold and drag to aim. Keys: Q cable (aims at mouse), E Cut Throat.</p>
   </div></div>
@@ -80,6 +83,7 @@ body.edit .ed{outline:2px dashed var(--gold);outline-offset:3px;cursor:move}
 <div id="sheet" hidden>
  <div class="sh"><b>Settings</b><button id="sclose">Close</button></div>
  <div id="rows"></div>
+ <label class="row chk"><input type="checkbox" id="noobchk"><span>Remove obstacles (only the arena walls remain)</span></label>
  <label class="row chk"><input type="checkbox" id="ovchk"><span>Overlay controls on the arena (hides the bottom bar)</span></label>
  <div class="btns"><button id="sedit">Move controls</button><button id="sreset">Reset layout</button><button id="sall">Reset all</button></div>
  <p class="hint">Saved on this device. The game is paused while this is open.</p>
@@ -88,8 +92,9 @@ body.edit .ed{outline:2px dashed var(--gold);outline-offset:3px;cursor:move}
 <script>
 // Matched to Fanny where sources exist: move speed 265, Steel Cable cost 14 (1 less per recast within 5s, no cooldown), Cut Throat 12 energy and 25s cooldown. Cable speed, range and energy regen are estimates.
 const CFG={W:1000,H:600,R:14,speed:265,eMax:100,regen:8,
- cable:{cost:14,step:1,window:5,range:1300,speed:700,hook:2000,cd:.5,boost:.5},
+ cable:{cost:14,step:1,window:5,range:1300,speed:700,hook:2000,cd:.5,boost:.69,more:.33,dummy:3},
  cut:{cost:12,range:240,cd:25,speed:1500,dmg:70,mark:.3},
+ t1:{cost:8,cd:1.5,refund:6,r:110},
  time:60,hp:100,comboWindow:2.5};
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
@@ -99,15 +104,18 @@ theme();matchMedia('(prefers-color-scheme:light)').addEventListener('change',the
 function resize(){const r=cv.getBoundingClientRect();dpr=devicePixelRatio||1;cw=r.width;ch=r.height;cv.width=cw*dpr;cv.height=ch*dpr;sc=Math.min(cw/CFG.W,ch/CFG.H)*.97;ox=(cw-CFG.W*sc)/2;oy=(ch-CFG.H*sc)/2}
 addEventListener('resize',resize);resize();
 
-const S={mode:'static',phase:'menu',paused:false,score:0,time:CFG.time,kills:0,best:0};
+const S={mode:'static',phase:'menu',paused:false,score:0,time:CFG.time,kills:0,best:0,bs:0};
 try{S.best=+localStorage.getItem('fannyBest')||0}catch(e){}
-let P,T,obs=[],haz=[],dash=null,cabs=[],stuck=0,rem=0,vdx=0,vdy=0,fx=[],energy,cdC=0,cdU=0,lastCable=-9,chain=0,lastC=-99,now=0,aim=null,cLine=null,inv=0;
+let P,T,obs=[],haz=[],dash=null,cabs=[],stuck=0,rem=0,vdx=0,vdy=0,fx=[],energy,cdC=0,cdU=0,lastCable=-9,chain=0,lastC=-99,now=0,aim=null,cLine=null,inv=0,fl=null,flN=0,tor=[],t1cd=0;
+// Target types: hp = hits to kill, pts = base points, sp = speed multiplier. Streak = consecutive kills without a drifter hit or stopping.
+let streak=0,idle=0;
+const TY=[{hp:1,r:CFG.R,pts:1,col:null,sp:1},{hp:3,r:CFG.R,pts:3,col:'#ff8a3d',sp:1},{hp:5,r:CFG.R,pts:5,col:'#b36bff',sp:1}];
 const joy={x:0,y:0},keys={};let mouse=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a);
 const norm=(x,y)=>{const l=Math.hypot(x,y)||1;return [x/l,y/l]};
 
 // ---- Settings (saved in localStorage) ----
-const DEF={cd:.5,cutcd:25,hook:2000,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
+const DEF={cd:.5,cutcd:25,hook:2000,pull:700,zoom:1,joy:1,cab:1,ult:1,ov:false,noobs:false,pos:{joy:[0,0],en:[0,0],cab:[0,0],ult:[0,0]}};
 let cfg=JSON.parse(JSON.stringify(DEF));
 try{const o=JSON.parse(localStorage.getItem('fannySettings')||'null');
  if(o&&typeof o==='object'){for(const k in DEF)if(k!=='pos'&&typeof o[k]===typeof DEF[k])cfg[k]=o[k];
@@ -134,21 +142,29 @@ const FIELDS=[
  ['ult','Cut Throat button size',.6,1.8,.05,pct]];
 const syncs=[];
 FIELDS.forEach(([k,label,min,max,step,fmt])=>{const row=document.createElement('label');row.className='row';
- row.innerHTML=`<span>${label}</span><output></output><input type="range" min="${min}" max="${max}" step="${step}">`;
+ row.innerHTML=`<span>${label}</span><output></output><div class="trk"><input type="range" min="${min}" max="${max}" step="${step}"></div>`;
  const inp=row.querySelector('input'),out=row.querySelector('output');
  const sync=()=>{inp.value=cfg[k];out.textContent=fmt(cfg[k])};sync();syncs.push(sync);
  inp.oninput=()=>{cfg[k]=+inp.value;out.textContent=fmt(cfg[k]);applyCfg();saveCfg()};
+ // Sliders ignore a raw touch-down, so a swipe that starts on one just scrolls the panel. A horizontal drag or a tap sets the value.
+ const trk=row.querySelector('.trk');let g=null;
+ const setFrom=x=>{const r=inp.getBoundingClientRect(),f=clamp((x-r.left-9)/Math.max(1,r.width-18),0,1);inp.value=min+f*(max-min);inp.oninput()};
+ trk.addEventListener('pointerdown',e=>{g={x:e.clientX,y:e.clientY,id:e.pointerId,drag:e.pointerType!=='touch'};if(g.drag){trk.setPointerCapture(e.pointerId);setFrom(e.clientX)}});
+ trk.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;if(!g.drag){const dx=Math.abs(e.clientX-g.x),dy=Math.abs(e.clientY-g.y);if(dx>8&&dx>dy){g.drag=true;trk.setPointerCapture(e.pointerId)}}if(g.drag)setFrom(e.clientX)});
+ trk.addEventListener('pointerup',e=>{if(g&&e.pointerId===g.id&&!g.drag&&Math.hypot(e.clientX-g.x,e.clientY-g.y)<8)setFrom(e.clientX);g=null});
+ trk.addEventListener('pointercancel',()=>{g=null});
  $('rows').appendChild(row)});
-$('ovchk').checked=cfg.ov;
+$('ovchk').checked=cfg.ov;$('noobchk').checked=cfg.noobs;
 let editing=false;
 const syncPause=()=>{S.paused=!$('sheet').hidden||editing};
 $('gear').onclick=()=>{$('sheet').hidden=!$('sheet').hidden;syncPause()};
 $('sclose').onclick=()=>{$('sheet').hidden=true;syncPause()};
+$('noobchk').onchange=e=>{cfg.noobs=e.target.checked;saveCfg();if(S.phase==='play'){makeObs();resolve(P,P.r);spawnT()}};
 $('ovchk').onchange=e=>{cfg.ov=e.target.checked;applyCfg();saveCfg()};
 $('sedit').onclick=()=>{$('sheet').hidden=true;editing=true;document.body.classList.add('edit');$('editbar').hidden=false;syncPause()};
 $('edone').onclick=()=>{editing=false;document.body.classList.remove('edit');$('editbar').hidden=true;syncPause();saveCfg()};
 $('sreset').onclick=()=>{for(const k in cfg.pos)cfg.pos[k]=[0,0];applyCfg();saveCfg()};
-$('sall').onclick=()=>{cfg=JSON.parse(JSON.stringify(DEF));syncs.forEach(f=>f());$('ovchk').checked=false;applyCfg();saveCfg()};
+$('sall').onclick=()=>{cfg=JSON.parse(JSON.stringify(DEF));syncs.forEach(f=>f());$('ovchk').checked=false;$('noobchk').checked=false;applyCfg();saveCfg();if(S.phase==='play'){makeObs();resolve(P,P.r);spawnT()}};
 // Layout editing: drag any control; positions are stored as fractions of the screen.
 Object.entries(UI).forEach(([k,el])=>{el.classList.add('ed');let id=null,sx=0,sy=0,p0=[0,0],r0=null;
  el.addEventListener('pointerdown',e=>{if(!editing)return;e.stopImmediatePropagation();e.preventDefault();id=e.pointerId;el.setPointerCapture(id);
@@ -170,21 +186,22 @@ function resolve(o,r){let hit=false;
    if(m===l)o.x=b.x-r;else if(m===rr)o.x=b.x+b.w+r;else if(m===t)o.y=b.y-r;else o.y=b.y+b.h+r}}}
  return hit}
 function inObs(x,y,m){return obs.some(b=>x>b.x-m&&x<b.x+b.w+m&&y>b.y-m&&y<b.y+b.h+m)}
-function makeObs(){obs=[];const n=5+Math.floor(Math.random()*3);
+function makeObs(){obs=[];if(cfg.noobs)return;const n=5+Math.floor(Math.random()*3);
  for(let i=0,t=0;i<n&&t<200;t++){const w=rnd(50,150),h=rnd(36,120),x=rnd(60,CFG.W-w-60),y=rnd(50,CFG.H-h-50);
   const b={x,y,w,h};if(Math.hypot(x+w/2-P.x,y+h/2-P.y)<Math.max(w,h)/2+90)continue;
   if(obs.some(o=>x<o.x+o.w+40&&x+w+40>o.x&&y<o.y+o.h+40&&y+h+40>o.y))continue;obs.push(b);i++}}
 function makeHaz(){haz=[];for(let i=0;i<3;i++){let x,y,k=0;do{x=rnd(40,CFG.W-40);y=rnd(40,CFG.H-40)}while((inObs(x,y,20)||Math.hypot(x-P.x,y-P.y)<200)&&k++<80);
  const a=rnd(0,6.28);haz.push({x,y,r:12,vx:Math.cos(a)*65,vy:Math.sin(a)*65})}}
 function spawnT(){let x,y,k=0;do{x=rnd(40,CFG.W-40);y=rnd(40,CFG.H-40)}while((inObs(x,y,24)||Math.hypot(x-P.x,y-P.y)<260)&&k++<150);
- const a=rnd(0,6.28),moving=Math.random()<.5,v=moving?85+S.kills*4:0;T={x,y,r:16,hp:CFG.hp,moving,vx:Math.cos(a)*v,vy:Math.sin(a)*v,born:now,marks:0}}
+ const a=rnd(0,6.28),moving=Math.random()<.5,q=Math.random(),ty=q<.55?TY[0]:q<.85?TY[1]:TY[2],v=moving?(85+S.kills*4)*ty.sp:0;
+ T={x,y,r:ty.r,hp:ty.hp,max:ty.hp,pts:ty.pts,col:ty.col||C.gold,hit:0,moving,vx:Math.cos(a)*v,vy:Math.sin(a)*v,born:now,marks:0}}
 function bounce(o,dt){let nx=o.x+o.vx*dt;const t={x:nx,y:o.y};if(resolve({x:nx,y:o.y},o.r)&&(nx!==clamp(nx,o.r,CFG.W-o.r)||obs.some(b=>Math.hypot(clamp(nx,b.x,b.x+b.w)-nx,clamp(o.y,b.y,b.y+b.h)-o.y)<o.r)))o.vx=-o.vx;else o.x=nx;
  let ny=o.y+o.vy*dt;if(ny<o.r||ny>CFG.H-o.r||obs.some(b=>Math.hypot(clamp(o.x,b.x,b.x+b.w)-o.x,clamp(ny,b.y,b.y+b.h)-ny)<o.r))o.vy=-o.vy;else o.y=ny}
 
-function start(){P={x:150,y:CFG.H/2,r:CFG.R,fx:1,fy:0};S.score=0;S.kills=0;S.time=CFG.time;S.phase='play';now=0;energy=CFG.eMax;cdC=cdU=0;dash=null;cabs=[];fx=[];cLine=null;inv=0;lastCable=-9;chain=0;lastC=-99;
+function start(){P={x:150,y:CFG.H/2,r:CFG.R,fx:1,fy:0};S.score=0;S.kills=0;S.bs=0;streak=0;idle=0;S.time=CFG.time;S.phase='play';now=0;energy=CFG.eMax;cdC=cdU=0;dash=null;cabs=[];fx=[];cLine=null;inv=0;fl=null;flN=0;tor=[];t1cd=0;lastCable=-9;chain=0;lastC=-99;
  makeObs();makeHaz();spawnT();$('overlay').hidden=true}
 function end(){S.phase='over';dash=null;aim=null;if(S.score>S.best){S.best=S.score;try{localStorage.setItem('fannyBest',S.best)}catch(e){}}
- const r=$('result');r.hidden=false;r.textContent=`Score ${S.score}, ${S.kills} kills. Best ${S.best}.`;$('start').textContent='Run again';$('overlay').hidden=false}
+ const r=$('result');r.hidden=false;r.textContent=`Score ${S.score}, ${S.kills} kills, best streak ${S.bs||0}. Best ${S.best}.`;$('start').textContent='Run again';$('overlay').hidden=false}
 function say(x,y,txt,col){fx.push({x,y,txt,col,t:0})}
 
 function rayHit(dx,dy,range){for(let d=6;d<=range;d+=4){const px=P.x+dx*d,py=P.y+dy*d;
@@ -201,42 +218,68 @@ function cut(dir){if(S.phase!=='play'||S.paused||dash||cdU>0||energy<CFG.cut.cos
   dash={sx:P.x,sy:P.y,tx:T.x-dx*back,ty:T.y-dy*back,speed:CFG.cut.speed,kind:'cut',hit:true}}
  else say(P.x,P.y-24,'No target in range',C.danger)}
 function autoDir(){return Math.hypot(joy.x,joy.y)>.3?norm(joy.x,joy.y):norm(T.x-P.x,T.y-P.y)}
-function arrive(){P.x=dash.tx;P.y=dash.ty;dash=null}
-// Grappling hook: the hook travels out first. Only when it hits does the pull start, using the distance to the anchor at that moment.
-function attach(c){const ex=c.ax-P.x,ey=c.ay-P.y,dd=Math.hypot(ex,ey),L=dd-(P.r+2);
- if(L<2){c.dead=true;return}
- const pv=cabs.filter(k=>k.att).pop();c.dx=ex/dd;c.dy=ey/dd;c.r=L;c.att=true;
- let vx=L*c.dx,vy=L*c.dy;if(pv){vx+=Math.max(0,pv.r)*pv.dx;vy+=Math.max(0,pv.r)*pv.dy}
- rem=Math.hypot(vx,vy);vdx=vx;vdy=vy}
-function endFlight(){cabs=cabs.filter(c=>!c.att)}
-function hooks(dt){for(const c of cabs)if(!c.att&&!c.dead){c.t+=CFG.cable.hook*dt;if(c.t>=c.hd)attach(c)}cabs=cabs.filter(c=>!c.dead)}
-// Cable flight: each cable pulls her along its own length. Direction is the bisector of the last two cables, and extra cables in the same direction add speed.
-function flyStep(dt){const at=cabs.filter(c=>c.att),n=at.length,act=at.slice(-2),a=at[n-1],b=n>1?at[n-2]:null;
- const sx=a.dx+(b?b.dx:0),sy=a.dy+(b?b.dy:0),sm=Math.hypot(sx,sy);
- if(b&&sm<.3){endFlight();return}
- const dx=sx/(sm||1),dy=sy/(sm||1);P.fx=dx;P.fy=dy;
- const spd=CFG.cable.speed*(b?1+CFG.cable.boost*(sm-1):1);let st=spd*dt;
- st=Math.min(st,rem);
- const ox=P.x,oy=P.y;P.x+=dx*st;P.y+=dy*st;if(resolve(P,P.r)){P.x=ox;P.y=oy;endFlight();return}
- const mx=P.x-ox,my=P.y-oy;stuck=Math.hypot(mx,my)<st*.3?stuck+dt:0;
- rem-=Math.hypot(mx,my);for(const c of act)c.r-=mx*c.dx+my*c.dy;
- if(rem<=1)endFlight();if(stuck>.12){endFlight();stuck=0}}
-function touchCheck(x0,y0){const dx=P.x-x0,dy=P.y-y0,l2=dx*dx+dy*dy,t=l2?clamp(((T.x-x0)*dx+(T.y-y0)*dy)/l2,0,1):0;
- if(Math.hypot(x0+dx*t-T.x,y0+dy*t-T.y)<P.r+T.r){S.score++;S.kills++;say(T.x,T.y-20,'+1',C.gold);if(S.kills%3===0){makeObs();resolve(P,P.r)}spawnT()}}
+// Cut Throat lands 3 hits when the dash arrives.
+function arrive(){P.x=dash.tx;P.y=dash.ty;const k=dash.kind;dash=null;if(k==='cut')hitT(3,false)}
+// Speed from the video's timer test (same distance, same direction): 1 cable 2.04s, 2 cables 1.21s, 3 cables 1.06s, i.e. x1, x1.69, x1.92. The pair gives 1+boost*(sm-1); each cable after the 2nd adds a shrinking extra (ratio 'more'). Aligned cables (sm near 2) get the full effect.
+function extraBoost(sm){let e=0,r=CFG.cable.more;for(let i=3;i<=flN;i++){e+=CFG.cable.boost*Math.pow(r,i-2)}return e*Math.max(0,sm-1)}
+// Grappling hook: the hook travels out first, then anchors at the wall hit. Active anchors are a FIFO queue of 2: a 3rd attach drops the oldest.
+function attach(c){const d=Math.hypot(c.ax-P.x,c.ay-P.y);
+ if(d<P.r+4){c.dead=true;return}
+ c.att=true;flN++;
+ const at=cabs.filter(k=>k.att&&!k.dead&&!k.dummy);
+ while(at.length>2){const o=at.shift();o.dummy=true;o.dt=0}
+ fl={boost:1,side:0,deg:true,t:0};
+ if(at.length>1){const p1=at[0],p2=at[1],u=norm(p1.ax-P.x,p1.ay-P.y),v=norm(p2.ax-P.x,p2.ay-P.y),sm=Math.hypot(u[0]+v[0],u[1]+v[1]);
+  const ex=p2.ax-p1.ax,ey=p2.ay-p1.ay,len=Math.hypot(ex,ey),sd=ex*(P.y-p1.ay)-ey*(P.x-p1.ax);
+  fl={boost:1+CFG.cable.boost*(sm-1)+extraBoost(sm),side:Math.sign(sd),deg:len<6||Math.abs(sd)/len<3,dot0:u[0]*v[0]+u[1]*v[1],crossed:false,dx:(u[0]+v[0])/(sm||1),dy:(u[1]+v[1])/(sm||1),t:0}}}
+function endFlight(){cabs=cabs.filter(c=>!c.att);fl=null;flN=0}
+function hooks(dt){for(const c of cabs)if(c.dummy){c.dt+=dt;if(c.dt>CFG.cable.dummy)c.dead=true}
+ for(const c of cabs)if(!c.att&&!c.dead){c.t+=CFG.cable.hook*dt;if(c.t>=c.hd)attach(c)}cabs=cabs.filter(c=>!c.dead)}
+// Cable flight. One anchor: pull straight at it and stop there. Two anchors: fly in a straight line along the bisector of the two cables, fixed at the moment the pair forms (even if the cables are uneven), and detach once she has crossed the line P1-P2 and the angle between the cables is back to its entry value. Narrower entry angle means faster.
+function flyStep(dt){const at=cabs.filter(c=>c.att&&!c.dead&&!c.dummy);if(!at.length||!fl){endFlight();return}
+ const a=at[at.length-1],b=at.length>1?at[at.length-2]:null;
+ fl.t+=dt;if(fl.t>10){endFlight();return}
+ let dx,dy,land=null;const spd=CFG.cable.speed*fl.boost;
+ if(!b||fl.deg){const t=b&&Math.hypot(b.ax-P.x,b.ay-P.y)<Math.hypot(a.ax-P.x,a.ay-P.y)?b:a;
+  const ex=t.ax-P.x,ey=t.ay-P.y,d=Math.hypot(ex,ey);if(d<=P.r+2){endFlight();return}
+  dx=ex/d;dy=ey/d;land=d-(P.r+2)}
+ else{dx=fl.dx;dy=fl.dy}
+ P.fx=dx;P.fy=dy;const st=spd*dt,step=land!==null?Math.min(st,land):st,ox=P.x,oy=P.y;
+ P.x+=dx*step;P.y+=dy*step;
+ if(resolve(P,P.r)){P.x=ox;P.y=oy;lose('hit wall');endFlight();return}
+ if(land!==null){if(land-step<=.5)endFlight();return}
+ const ex=a.ax-b.ax,ey=a.ay-b.ay,s1=ex*(P.y-b.ay)-ey*(P.x-b.ax);
+ if(!fl.crossed&&Math.sign(s1)*fl.side<=0)fl.crossed=true;
+ if(fl.crossed){const dotAt=(x,y)=>{const u=norm(b.ax-x,b.ay-y),v=norm(a.ax-x,a.ay-y);return u[0]*v[0]+u[1]*v[1]},g1=dotAt(P.x,P.y)-fl.dot0;
+  if(g1>=0){const g0=dotAt(ox,oy)-fl.dot0,t=g0<0?-g0/(g1-g0):1;P.x=ox+(P.x-ox)*t;P.y=oy+(P.y-oy)*t;endFlight()}}}
+// Auto Tornado Strike: fires when she touches an enemy mid-flight, if energy and its internal cooldown allow. Refund per hero hit.
+function tornado(){const t=CFG.t1;if(now<t1cd||energy<t.cost)return;
+ energy-=t.cost;t1cd=now+t.cd;tor.push({x:P.x,y:P.y,t:0});energy=Math.min(CFG.eMax,energy+t.refund);say(P.x,P.y-44,'Tornado Strike',C.accent)}
+// Each touch deals 1 hit (0.35s per-target cooldown). A kill extends the streak and pays base points plus up to +5 streak bonus.
+function lose(m){if(streak>0){say(P.x,P.y-44,'Streak lost: '+m,C.danger);streak=0}}
+function hitT(n,fly){T.hp-=n;T.hit=now+.35;if(fly)tornado();
+ if(T.hp>0){say(T.x,T.y-T.r-8,'-'+n,C.text);return}
+ streak++;S.bs=Math.max(S.bs||0,streak);const pts=T.pts+Math.min(streak-1,5);S.score+=pts;S.kills++;
+ say(T.x,T.y-20,'+'+pts,C.gold);if(streak>1)say(T.x,T.y-44,'Streak x'+streak,C.accent);
+ if(S.kills%3===0){makeObs();resolve(P,P.r)}spawnT()}
+function touchCheck(x0,y0,fly){const dx=P.x-x0,dy=P.y-y0,l2=dx*dx+dy*dy,t=l2?clamp(((T.x-x0)*dx+(T.y-y0)*dy)/l2,0,1):0;
+ if(Math.hypot(x0+dx*t-T.x,y0+dy*t-T.y)<P.r+T.r){if(now>=T.hit)hitT(1,fly)}}
 
 function update(dt){if(S.phase!=='play'||S.paused)return;now+=dt;
  cdC=Math.max(0,cdC-dt);cdU=Math.max(0,cdU-dt);inv=Math.max(0,inv-dt);energy=Math.min(CFG.eMax,energy+CFG.regen*dt);
- const px0=P.x,py0=P.y;hooks(dt);
+ const px0=P.x,py0=P.y;hooks(dt);const fly0=!dash&&cabs.some(c=>c.att);
  if(dash){const dx=dash.tx-P.x,dy=dash.ty-P.y,d=Math.hypot(dx,dy),st=dash.speed*dt;
   if(d<=st)arrive();else{P.x+=dx/d*st;P.y+=dy/d*st}}
  else if(cabs.some(c=>c.att))flyStep(dt);
  else{let vx=joy.x+((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),vy=joy.y+((keys.s||keys.arrowdown)?1:0)-((keys.w||keys.arrowup)?1:0);
   const m=Math.hypot(vx,vy);if(m>1){vx/=m;vy/=m}if(m>.05){P.fx=vx/(m>1?1:m);P.fy=vy/(m>1?1:m);const f=norm(vx,vy);P.fx=f[0];P.fy=f[1]}
   P.x+=vx*CFG.speed*dt;P.y+=vy*CFG.speed*dt;resolve(P,P.r)}
- if(T.moving)bounce(T,dt);touchCheck(px0,py0);
- haz.forEach(h=>{bounce(h,dt);if(!dash&&!cabs.some(c=>c.att)&&inv<=0&&Math.hypot(h.x-P.x,h.y-P.y)<P.r+h.r){inv=1;energy=Math.max(0,energy-20);say(P.x,P.y-24,'-20 energy',C.danger);
+ // Streak: breaks the moment there is no active cable or dash, on a wall hit, or on a drifter hit.
+ if(streak>0&&!dash&&!cabs.length)lose('Stopped');
+ if(T.moving)bounce(T,dt);touchCheck(px0,py0,fly0);
+ haz.forEach(h=>{bounce(h,dt);if(!dash&&!cabs.some(c=>c.att)&&inv<=0&&Math.hypot(h.x-P.x,h.y-P.y)<P.r+h.r){inv=1;energy=Math.max(0,energy-20);say(P.x,P.y-24,'-20 energy',C.danger);lose('hit');
   const [nx,ny]=norm(P.x-h.x,P.y-h.y);P.x+=nx*36;P.y+=ny*36;resolve(P,P.r)}});
- fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t<.9);if(cLine){cLine.t-=dt;if(cLine.t<=0)cLine=null}}
+ fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t<.9);tor.forEach(f=>f.t+=dt);tor=tor.filter(f=>f.t<.35);if(cLine){cLine.t-=dt;if(cLine.t<=0)cLine=null}}
 
 function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dpr);if(P)view();
  ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*ox,dpr*oy);const W=CFG.W,H=CFG.H;
@@ -246,8 +289,10 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
  obs.forEach(b=>{ctx.fillStyle=C.wall;ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeStyle=C.wallTop;ctx.lineWidth=2;ctx.strokeRect(b.x+1,b.y+1,b.w-2,b.h-2)});
  if(!P)return;
  haz.forEach(h=>{ctx.fillStyle=C.danger;ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(h.x,h.y,h.r+6,0,7);ctx.fill();ctx.globalAlpha=1;ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,7);ctx.fill()});
- if(T&&S.phase!=='menu'){ctx.strokeStyle=C.gold;ctx.lineWidth=3;ctx.beginPath();ctx.arc(T.x,T.y,T.r,0,7);ctx.stroke();ctx.fillStyle=C.gold;ctx.beginPath();ctx.arc(T.x,T.y,T.r-7,0,7);ctx.fill();
+ if(T&&S.phase!=='menu'){ctx.strokeStyle=T.col;ctx.lineWidth=3;ctx.beginPath();ctx.arc(T.x,T.y,T.r,0,7);ctx.stroke();ctx.globalAlpha=now<T.hit?.45:1;ctx.fillStyle=T.col;ctx.beginPath();ctx.arc(T.x,T.y,T.r-7,0,7);ctx.fill();ctx.globalAlpha=1;
+  if(T.max>1){ctx.lineWidth=4;ctx.beginPath();ctx.arc(T.x,T.y,T.r+6,-Math.PI/2,-Math.PI/2+6.283*T.hp/T.max);ctx.stroke()}
   }
+ tor.forEach(f=>{const k=f.t/.35;ctx.globalAlpha=1-k;ctx.strokeStyle=C.accent;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,CFG.t1.r*(.3+.7*k),0,7);ctx.stroke()});ctx.globalAlpha=1;
  const at2=cabs.filter(c=>c.att).slice(-2);cabs.forEach(c=>{const tx=c.att?c.ax:c.ox+c.dx*c.t,ty=c.att?c.ay:c.oy+c.dy*c.t;ctx.globalAlpha=(!c.att||at2.includes(c))?1:.35;ctx.strokeStyle=C.accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(tx,ty);ctx.stroke();ctx.fillStyle=C.accent;ctx.beginPath();ctx.arc(tx,ty,4,0,7);ctx.fill()});ctx.globalAlpha=1;
  if(cLine){ctx.globalAlpha=Math.max(0,cLine.t/.18);ctx.strokeStyle=C.danger;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cLine.x1,cLine.y1);ctx.lineTo(cLine.x2,cLine.y2);ctx.stroke();ctx.globalAlpha=1}
  if(aim&&S.phase==='play'){ctx.strokeStyle=aim.kind==='cable'?C.accent:C.danger;ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();
@@ -257,7 +302,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
  ctx.font='700 18px Roboto,system-ui,sans-serif';ctx.textAlign='center';fx.forEach(f=>{ctx.globalAlpha=1-f.t/.9;ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,f.y-f.t*40)});ctx.globalAlpha=1}
 function aimDir(){return aim.drag?[aim.dx,aim.dy]:(aim.kind==='cable'?autoDir():norm(T.x-P.x,T.y-P.y))}
 
-function hud(){$('sc').textContent=S.score;
+function hud(){$('sc').textContent=S.score;$('stk').textContent=streak?'x'+streak:'0';
  const e=energy==null?CFG.eMax:energy;$('fill').style.width=e/CFG.eMax*100+'%';$('enT').textContent=Math.floor(e);
  $('cab').classList.toggle('low',e<cableCost());$('cab').querySelector('i').textContent=cableCost();$('ult').classList.toggle('low',e<CFG.cut.cost);
  $('cab').querySelector('.cd').style.height=(cdC/(CFG.cable.cd||1)*100)+'%';$('ult').querySelector('.cd').style.height=(cdU/(CFG.cut.cd||1)*100)+'%'}
