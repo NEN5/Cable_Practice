@@ -23,7 +23,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
 function aimDir(){return aim.drag?[aim.dx,aim.dy]:(aim.kind==='cable'?autoDir():norm(T.x-P.x,T.y-P.y))}
 
 // HUD: only touch the DOM when a value actually changed (the WebView re-styles the page on every write).
-const hv={},ultCd=$('ult').querySelector('.cd'),ultN=$('ult').querySelector('.cdn'),pips=$('cab').querySelectorAll('.pips i');
+const hv={},ultCd=$('ult').querySelector('.cd'),ultN=$('ult').querySelector('.cdn');
 function setT(id,v){if(hv[id]!==v){hv[id]=v;$(id).textContent=v}}
 function setS(id,p,v){const el=typeof id==='string'?$(id):id,k=(typeof id==='string'?id:id.parentNode.id)+p;if(hv[k]!==v){hv[k]=v;el.style[p]=v}}
 let lc=S.coins;
@@ -34,9 +34,6 @@ function hud(){if(S.coins!==lc){lc=S.coins;const el=$('coinui');el.classList.rem
  if(hv.e!==e){hv.e=e;ultCd.style.setProperty('--e',e+'%')}
  if(hv.cdn!==n){hv.cdn=n;ultN.textContent=n}
  if(hv.low!==low){const u=$('ult');u.classList.toggle('low',low);if(hv.low===true&&!low){u.classList.remove('rdy');void u.offsetWidth;u.classList.add('rdy')}hv.low=low}
- // Steel Cables: one pip per anchored cable (the game keeps at most 2 anchors alive)
- const ac=Math.min(2,cabs.filter(c=>c.att&&!c.dead&&!c.dummy).length);
- if(hv.ac!==ac){hv.ac=ac;pips.forEach((p,i)=>p.classList.toggle('on',i<ac))}
  const a1=!!(aim&&aim.kind==='cable'),a2=!!(aim&&aim.kind==='cut');
  if(hv.a1!==a1){hv.a1=a1;$('cab').classList.toggle('aim',a1)}
  if(hv.a2!==a2){hv.a2=a2;$('ult').classList.toggle('aim',a2)}}
