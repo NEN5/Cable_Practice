@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0b0e12">
+<meta name="theme-color" content="#070d0b">
 <title>Cable Master</title>
 <link rel="stylesheet" href="css/style.css">
 </head><body>
@@ -34,8 +34,49 @@
   <div id="joy"><div id="knob"></div></div>
   <div id="en"><div class="lbl"><span>HP</span><span id="enT">100</span></div><div id="bar"><div id="fill"></div></div></div>
   <div id="skills">
-   <button class="skill" id="cab" aria-label="Steel Cables"><svg viewBox="0 0 24 24"><rect x="3.5" y="12" width="11" height="6" rx="3" transform="rotate(-45 9 15)"/><rect x="9.5" y="6" width="11" height="6" rx="3" transform="rotate(-45 15 9)"/></svg><div class="cd"></div></button>
-   <button class="skill" id="ult" aria-label="Cut Throat"><svg viewBox="0 0 24 24"><path d="M5 20l6-15M10 21l6-15M15 21l5-12"/></svg><div class="cd"></div></button>
+   <button class="skill" id="cab" aria-label="Steel Cables">
+    <span class="face">
+     <svg class="ic" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+       <linearGradient id="gSt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fb0aa"/></linearGradient>
+       <path id="hkRope" d="M32 49C32 57 22 58 21 66"/>
+       <path id="hkHead" d="M32 6V44M32 24C20 24 15 31 15 41M32 24C44 24 49 31 49 41"/>
+      </defs>
+      <g transform="translate(1 -1) rotate(42 32 32) scale(1.02) translate(-.5 .5)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+       <use href="#hkRope" stroke="#060b0a" stroke-width="7"/>
+       <use href="#hkHead" stroke="#060b0a" stroke-width="8"/>
+       <use href="#hkRope" stroke="#c98a45" stroke-width="3.6"/>
+       <use href="#hkRope" stroke="#ffd9a0" stroke-width="1.2" stroke-dasharray="1.6 3"/>
+       <use href="#hkHead" stroke="url(#gSt)" stroke-width="4.4"/>
+       <circle cx="32" cy="47" r="4" fill="none" stroke="#060b0a" stroke-width="5"/>
+       <circle cx="32" cy="47" r="4" fill="none" stroke="#ffa23c" stroke-width="2.4"/>
+       <path d="M32 3.5L35 10H29Z" fill="#fff" stroke="#060b0a" stroke-width="1.2"/>
+      </g>
+     </svg>
+     <span class="cd"></span>
+    </span>
+    <span class="pips"><i></i><i></i></span>
+   </button>
+   <button class="skill" id="ult" aria-label="Cut Throat">
+    <span class="face">
+     <svg class="ic" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+       <linearGradient id="gBl" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ff4d55"/><stop offset=".55" stop-color="#ffd2d4"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+       <path id="slA" d="M9 52Q36 44 56 9Q38 33 9 52Z"/>
+       <path id="slB" d="M55 52Q28 44 8 9Q26 33 55 52Z"/>
+      </defs>
+      <use href="#slA" fill="#060b0a" stroke="#060b0a" stroke-width="5" stroke-linejoin="round"/>
+      <use href="#slB" fill="#060b0a" stroke="#060b0a" stroke-width="5" stroke-linejoin="round"/>
+      <use href="#slB" fill="url(#gBl)" opacity=".85"/>
+      <use href="#slA" fill="url(#gBl)"/>
+      <circle cx="32" cy="32" r="4.5" fill="#fff"/>
+      <circle cx="32" cy="32" r="8" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"/>
+      <path d="M8 22H17M5 32H13M8 42H17" stroke="#ff9aa0" stroke-width="2" stroke-linecap="round" fill="none" opacity=".8"/>
+     </svg>
+     <span class="cd"></span>
+     <b class="cdn"></b>
+    </span>
+   </button>
   </div>
  </div>
  <div id="shop" hidden>

@@ -8,7 +8,7 @@ const CFG={W:1000,H:600,R:14,speed:265,eMax:100,regen:8,
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d');
 let C={},sc=1,ox=0,oy=0,dpr=1,cw=0,ch=0;
-function theme(){const s=getComputedStyle(document.documentElement);['floor','grid','wall','wallTop','accent','danger','gold','player','text','muted','hazard','ink'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim())}
+function theme(){const s=getComputedStyle(document.documentElement);['floor','grid','trace','copper','lane','river','stone','wall','wallTop','accent','danger','gold','player','text','muted','hazard','ink'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim())}
 theme();
 let live=false,arenaDirty=true;
 // Widen the arena to the stage's shape so it fills the screen. Height stays 600, so speeds and ranges feel the same.
