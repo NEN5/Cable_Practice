@@ -1,0 +1,11 @@
+{
+  "name": "cable-master",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cable Master: offline cable-swinging arcade game (Steel Cables / Cut Throat)",
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}

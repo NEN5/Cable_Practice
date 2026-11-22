@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0e12">
+<title>Cable Master</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<div id="app">
+ <div id="hud">
+  <div class="st"><small>Score</small><b id="sc">0</b></div>
+  <div class="st"><small>Best</small><b id="bs">0</b></div>
+  <div class="st"><small>Streak</small><b id="stk">0</b></div>
+  <div class="st"><small>Max</small><b id="mx">0</b></div>
+  <div class="sp"></div>
+  <div class="pill" id="coinui"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#e2b04a"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#a97c1f" stroke-width="1.6"/></svg><b id="cn">0</b></div>
+  <button id="hshop" class="ibtn" aria-label="Shop"><svg class="i" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></button>
+  <button id="gear" class="ibtn" aria-label="Settings"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg></button>
+ </div>
+ <div id="stage"><canvas id="cv"></canvas>
+  <div id="overlay"><div id="card">
+   <div id="cm">
+    <h1 id="ttl">Cable Master</h1>
+    <p id="sub">Swing, slash, repeat.</p>
+    <span id="nb" hidden>New best</span>
+    <div id="stats"></div>
+   </div>
+   <div id="cb">
+    <button id="start" class="btn pri">Play</button>
+    <button id="shopbtn" class="btn sec">Shop</button>
+   </div>
+  </div></div>
+ </div>
+ <div id="pad">
+  <div id="joy"><div id="knob"></div></div>
+  <div id="en"><div class="lbl"><span>HP</span><span id="enT">100</span></div><div id="bar"><div id="fill"></div></div></div>
+  <div id="skills">
+   <button class="skill" id="cab" aria-label="Steel Cables"><svg viewBox="0 0 24 24"><rect x="3.5" y="12" width="11" height="6" rx="3" transform="rotate(-45 9 15)"/><rect x="9.5" y="6" width="11" height="6" rx="3" transform="rotate(-45 15 9)"/></svg><div class="cd"></div></button>
+   <button class="skill" id="ult" aria-label="Cut Throat"><svg viewBox="0 0 24 24"><path d="M5 20l6-15M10 21l6-15M15 21l5-12"/></svg><div class="cd"></div></button>
+  </div>
+ </div>
+ <div id="shop" hidden>
+  <header><button id="sback" class="ibtn" aria-label="Back"><svg class="i" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Cable Skins</h2><div class="pill" id="shopcoin"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#e2b04a"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#a97c1f" stroke-width="1.6"/></svg><b id="scoins">0</b></div></header>
+  <div id="sbody"><p class="hint" style="text-align:center;margin:0 0 12px">Tap a preview to hear its sound.</p><div id="sgrid"></div></div>
+ </div>
+</div>
+<div id="sheet" hidden>
+ <div class="sh"><b>Settings</b><button id="sclose">Close</button></div>
+ <div id="rows"></div>
+ <label class="row chk"><input type="checkbox" id="sndchk"><span>Sound effects</span></label>
+ <label class="row chk"><input type="checkbox" id="noobchk"><span>Remove obstacles (only the arena walls remain)</span></label>
+ <label class="row chk"><input type="checkbox" id="noenchk"><span>Remove enemies (no red drifters)</span></label>
+ <label class="row chk"><input type="checkbox" id="fpschk"><span>Show FPS counter</span></label>
+ <label class="row chk"><input type="checkbox" id="vibchk"><span>Vibration on cable and kill (off by default)</span></label>
+ <label class="row chk"><input type="checkbox" id="ovchk"><span>Overlay controls on the arena (hides the bottom bar)</span></label>
+ <div class="btns"><button id="sedit">Edit UI</button><button id="sall">Reset all</button></div>
+ <p class="hint">Saved on this device. The game is paused while this is open.</p>
+</div>
+<div id="editbar" hidden><span>Drag a control to move it, tap it to adjust</span><button id="edone">Done</button></div>
+<div id="epanel" hidden><div class="eh"><b id="ename"></b><button id="ereset">Reset</button></div><div id="erows"></div></div>
+<div id="fps" hidden></div>
+<div id="splash" aria-hidden="true">
+ <div class="sp-in">
+  <div class="sp-by">made by</div>
+  <div class="sp-word"><span>N</span><span>E</span><span>N</span></div>
+  <svg class="sp-cable" viewBox="0 0 240 24" aria-hidden="true"><path d="M4 12H222"/><circle cx="230" cy="12" r="6"/></svg>
+ </div>
+</div>
+<audio id="bgm" loop preload="auto" src="assets/bgm.mp3"></audio>
+<script src="js/splash.js"></script>
+<script src="js/core.js"></script>
+<script src="js/skins.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/world.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/render.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
+</body></html>
