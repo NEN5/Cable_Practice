@@ -18,7 +18,7 @@ addEventListener('resize',resize);resize();
 
 const S={mode:'static',phase:'menu',paused:false,score:0,time:CFG.time,kills:0,best:0,bs:0,ms:0,coins:0};
 try{S.best=+localStorage.getItem('fannyBest')||0;S.coins=+localStorage.getItem('cableMasterCoins')||0;S.ms=+localStorage.getItem('cableMasterMaxStreak')||0}catch(e){}
-let P,T,obs=[],haz=[],dash=null,cabs=[],stuck=0,rem=0,vdx=0,vdy=0,fx=[],php,cdC=0,cdU=0,lastCable=-9,chain=0,lastC=-99,now=0,aim=null,cLine=null,inv=0,fl=null,flN=0,tor=[],t1cd=0;
+let P,T,obs=[],haz=[],dash=null,cabs=[],stuck=0,rem=0,vdx=0,vdy=0,fx=[],kf=[],php,cdC=0,cdU=0,lastCable=-9,chain=0,lastC=-99,now=0,aim=null,cLine=null,inv=0,fl=null,flN=0,tor=[],t1cd=0;
 // Target types: hp = hits to kill, pts = base points, sp = speed multiplier. Streak = consecutive kills without a drifter hit or stopping.
 let streak=0,idle=0,sw=null,proj=[];const buzz=n=>{if(!cfg.vib)return;try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
 // Rarity tiers: Common is the baseline. hp = hits to kill, pts = score, coin = coins dropped, w = spawn weight.

@@ -30,14 +30,14 @@ function shopDraw(){const t=performance.now()/1000,d=devicePixelRatio||1;
  pv.forEach(({cv:c,sk})=>{const r=c.getBoundingClientRect(),w=Math.round(r.width*d),h=Math.round(r.height*d);if(!w)return;
   if(c.width!==w||c.height!==h){c.width=w;c.height=h}
   const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);g.clearRect(0,0,r.width,r.height);
-  g.fillStyle=C.player;g.beginPath();g.arc(18,r.height-16,6,0,7);g.fill();
+  g.fillStyle=C.player;g.beginPath();g.arc(18,r.height-16,6,0,7);g.fill();{const d=norm(r.width-36,-(r.height-32));drawEyes(g,18,r.height-16,6,d[0],d[1])}
   drawCable(g,18,r.height-16,r.width-18,16,sk,1,t,3)})}
 // The shop opens from the menu or from the HUD bag button during a run (the game pauses while it is open).
 function openShop(){joy.x=joy.y=0;aim=null;$('shop').hidden=false;renderShop();syncPause()}
 $('shopbtn').onclick=openShop;$('hshop').onclick=openShop;
 $('sback').onclick=()=>{$('shop').hidden=true;pv=[];syncPause();if(S.phase!=='play')showMenu(lastMode,false)};
 
-function start(){live=false;fitWorld();live=true;P={x:150,y:CFG.H/2,r:CFG.R,fx:1,fy:0};S.score=0;S.kills=0;S.bs=0;streak=0;idle=0;S.time=CFG.time;S.phase='play';now=0;php=CFG.hp;cdC=cdU=0;dash=null;cabs=[];fx=[];cLine=null;inv=0;fl=null;flN=0;tor=[];t1cd=0;lastCable=-9;chain=0;lastC=-99;
+function start(){live=false;fitWorld();live=true;P={x:150,y:CFG.H/2,r:CFG.R,fx:1,fy:0};S.score=0;S.kills=0;S.bs=0;streak=0;idle=0;S.time=CFG.time;S.phase='play';now=0;php=CFG.hp;cdC=cdU=0;dash=null;cabs=[];fx=[];kf=[];cLine=null;inv=0;fl=null;flN=0;tor=[];t1cd=0;lastCable=-9;chain=0;lastC=-99;
  makeObs();makeHaz();spawnT();proj=[];$('overlay').hidden=true;$('shop').hidden=true;syncPause()}
 function end(){live=false;S.phase='over';dash=null;aim=null;const nb=S.score>S.best;if(nb){S.best=S.score;try{localStorage.setItem('fannyBest',S.best)}catch(e){}}
  showMenu('over',nb)}

@@ -8,6 +8,7 @@ The game is fully offline (no fonts or scripts loaded from the internet). GitHub
    - `www/` (the whole folder: `index.html`, `css/`, `js/`, `assets/`)
    - `package.json`
    - `capacitor.config.json`
+   - `icons/` (the whole folder: app icon files)
    - `.gitignore`
    - `.github/workflows/main.yml`
 3. Open the repo's **Actions** tab. The "Build APK" workflow runs on push (or press **Run workflow**).
@@ -28,5 +29,5 @@ To test in a browser, serve `www/` over http (for example `python -m http.server
 ## Notes
 - This is a **debug** APK: fine for personal use, not for the Play Store (that needs a signed release build).
 - The workflow edits the generated Android manifest/theme with `sed` to lock landscape and fullscreen. I haven't run this build, so if a step fails, send me the Actions log and I'll fix it.
-- App id: `com.nen.fannytrainer` (change it in `capacitor.config.json` if you like).
-- The app icon is the default Capacitor icon. I can generate a custom one if you want.
+- App id: `com.nen.cablemaster` (change it in `capacitor.config.json` if you like). It is a different app id from older builds, so it installs next to them as a separate app and starts with fresh saved data (best score, coins, skins, settings).
+- App icon: the `icons/` folder holds the grapnel icon. `icons/res/` is copied into the Android project by the "Install app icon" step in the workflow. `icons/icon-1024.png` is the full-size artwork.

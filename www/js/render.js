@@ -1,4 +1,18 @@
 // draw(), HUD, shop previews, main loop()
+// The character's two eyes sit on the front half of the body, so they show which way it faces.
+function drawEyes(g,x,y,r,fx,fy){const nx=-fy,ny=fx,fw=r*.4,sd=r*.36,er=r*.27;
+ for(const s of [-1,1]){const ex=x+fx*fw+nx*sd*s,ey=y+fy*fw+ny*sd*s;
+  g.fillStyle='#141b17';g.beginPath();g.arc(ex,ey,er,0,7);g.fill();
+  g.fillStyle='#fff';g.beginPath();g.arc(ex-er*.3,ey-er*.35,er*.34,0,7);g.fill()}}
+// Kill flash: a white bloom, an expanding ring in the target's color and short rays. Lasts about a third of a second.
+function drawKillFlash(){for(const f of kf){const k=f.t/.36,e=1-k;
+  if(f.big){ctx.globalAlpha=e*.09;ctx.fillStyle=f.col;ctx.fillRect(0,0,CFG.W,CFG.H)}
+  ctx.globalAlpha=e*.32;ctx.fillStyle=f.col;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1.5+k*2.2),0,7);ctx.fill();
+  ctx.globalAlpha=e*e*.95;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1+k*1.4),0,7);ctx.fill();
+  ctx.globalAlpha=e;ctx.strokeStyle=f.col;ctx.lineWidth=5*e+1;ctx.beginPath();ctx.arc(f.x,f.y,f.r+6+k*(f.big?64:46),0,7);ctx.stroke();
+  ctx.lineWidth=3*e+.5;ctx.lineCap='round';ctx.beginPath();const n=f.big?10:8;
+  for(let i=0;i<n;i++){const a=i/n*6.283+.3,r0=f.r+10+k*26,r1=r0+6+14*e;ctx.moveTo(f.x+Math.cos(a)*r0,f.y+Math.sin(a)*r0);ctx.lineTo(f.x+Math.cos(a)*r1,f.y+Math.sin(a)*r1)}
+  ctx.stroke();ctx.lineCap='butt';ctx.globalAlpha=1}}
 function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dpr);if(P)view();
  ctx.setTransform(dpr*sc,0,0,dpr*sc,dpr*ox,dpr*oy);const W=CFG.W,H=CFG.H;
  drawArena();
@@ -10,6 +24,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
    const r=T.r+5;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(T.x,T.y-r);ctx.lineTo(T.x+r,T.y);ctx.lineTo(T.x,T.y+r);ctx.lineTo(T.x-r,T.y);ctx.closePath();ctx.stroke()}
   if(T.max>1){ctx.lineWidth=4;ctx.beginPath();ctx.arc(T.x,T.y,T.r+6,-Math.PI/2,-Math.PI/2+6.283*T.hp/T.max);ctx.stroke()}
   }
+ drawKillFlash();
  tor.forEach(f=>{const k=f.t/.35;ctx.globalAlpha=1-k;ctx.strokeStyle=C.accent;ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,CFG.t1.r*(.3+.7*k),0,7);ctx.stroke()});ctx.globalAlpha=1;
  const at2=cabs.filter(c=>c.att).slice(-2),sk=curSkin(),tt=performance.now()/1000;
  cabs.forEach(c=>{const tx=c.att?c.ax:c.ox+c.dx*c.t,ty=c.att?c.ay:c.oy+c.dy*c.t;drawCable(ctx,P.x,P.y,tx,ty,sk,(!c.att||at2.includes(c))?1:.35,tt,3)});ctx.globalAlpha=1;
@@ -18,7 +33,7 @@ function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cw*dpr,ch*dp
   if(aim.kind==='cable'){const d=aimDir();ctx.moveTo(P.x,P.y);ctx.lineTo(P.x+d[0]*CFG.cable.range,P.y+d[1]*CFG.cable.range)}else ctx.arc(P.x,P.y,CFG.cut.range,0,7);ctx.stroke();ctx.setLineDash([])}
  if(sw&&sw.drag&&S.phase==='play'){const d=sw.dir,h=rayHit(d[0],d[1],CFG.cable.range),L=h?h.d:CFG.cable.range;ctx.strokeStyle=C.accent;ctx.lineWidth=2;ctx.globalAlpha=.7;ctx.setLineDash([10,8]);ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(P.x+d[0]*L,P.y+d[1]*L);ctx.stroke();ctx.setLineDash([]);if(h){ctx.fillStyle=C.accent;ctx.beginPath();ctx.arc(h.x,h.y,5,0,7);ctx.fill()}ctx.globalAlpha=1}
  ctx.globalAlpha=inv>0&&Math.floor(inv*10)%2?.4:1;ctx.fillStyle=C.player;ctx.beginPath();ctx.arc(P.x,P.y,P.r,0,7);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='rgba(0,0,0,.55)';ctx.stroke();
- ctx.fillStyle=C.accent;ctx.beginPath();ctx.arc(P.x+P.fx*(P.r-3),P.y+P.fy*(P.r-3),5,0,7);ctx.fill();ctx.globalAlpha=1;
+ drawEyes(ctx,P.x,P.y,P.r,P.fx,P.fy);ctx.globalAlpha=1;
  ctx.font='700 22px "Barlow Condensed","Roboto Condensed",sans-serif';ctx.textAlign='center';ctx.lineJoin='round';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.6)';fx.forEach(f=>{ctx.globalAlpha=1-f.t/.9;const y=f.y-f.t*40;ctx.strokeText(f.txt,f.x,y);ctx.fillStyle=f.col;ctx.fillText(f.txt,f.x,y)});ctx.globalAlpha=1}
 function aimDir(){return aim.drag?[aim.dx,aim.dy]:(aim.kind==='cable'?autoDir():norm(T.x-P.x,T.y-P.y))}
 

@@ -33,6 +33,18 @@ const SND={
   aurora(){tone({f:220,f2:440,d:.45,a:.1,type:'sawtooth',lp:1800,g:.07,wet:.4});tone({f:223,f2:446,d:.45,a:.1,type:'sawtooth',lp:1800,g:.07,wet:.4});[1047,1319,1568,1760,2093].forEach((f,i)=>tone({f,d:.3,g:.05,t:i*.06,wet:.5}))},
   phoenix(){nz({d:.4,type:'lowpass',f:200,f2:2500,g:.45,a:.05});tone({f:400,f2:1600,d:.3,type:'sawtooth',lp:2600,g:.09});tone({f:90,f2:60,d:.3,g:.25});crackle(10,.4,.14,3500)},
   celestia(){[523,659,784,1047].forEach(f=>tone({f,d:.7,a:.08,g:.06,wet:.5}));nz({d:.3,f:2000,f2:7000,g:.1});tone({f:2093,d:.5,t:.1,g:.05,wet:.6});tone({f:3136,d:.5,t:.2,g:.05,wet:.6})}},
+ // Cut Throat, katana style. Dash start: the blade is drawn (a rising metallic scrape out of the sheath, a steel ring and an air whoosh).
+ // Landing: three fast cuts (a high-to-low blade swish, a bright edge tick, a short ring), a soft thud on the last one and a small sheathing click.
+ cut:{base(){nz({d:.17,type:'bandpass',q:5,f:2200,f2:8000,g:.26,a:.012});nz({d:.14,type:'highpass',f:6000,g:.1,a:.03});
+   nz({t:.03,d:.14,type:'bandpass',q:1.5,f:600,f2:3000,g:.22,a:.012});
+   tone({t:.06,f:3150,d:.5,a:.008,g:.06,wet:.25});tone({t:.06,f:3162,d:.5,a:.008,g:.04});tone({t:.06,f:7310,d:.3,a:.004,g:.03});tone({t:.06,f:1480,d:.4,a:.008,g:.035})}},
+ cutHit:{base(){for(let i=0;i<3;i++){const t=i*.07;
+   nz({t,d:.09,type:'bandpass',q:2.5,f:7000,f2:900,g:.34,a:.004});
+   nz({t,d:.015,type:'highpass',f:8000,g:.2,a:.001});
+   tone({t,f:2600+i*350,d:.22,a:.002,g:.05,wet:.2});
+   nz({t:t+.02,d:.09,type:'lowpass',f:500,f2:150,g:i===2?.3:.16,a:.004})}
+   tone({t:.15,f:120,f2:50,d:.16,g:.2});
+   tone({t:.52,f:1800,d:.05,a:.002,g:.07});nz({t:.52,d:.02,type:'highpass',f:6000,g:.1,a:.001})}},
  attach:{base:hitBase,
   ember(){hitBase();tone({f:120,f2:50,d:.2,g:.25});crackle(8,.2,.12,4500)},
   frost(){tone({f:200,f2:90,d:.08,g:.2});tone({f:3136,d:.35,g:.1,wet:.3});tone({f:4186,d:.3,t:.01,g:.07,wet:.3});nz({d:.05,type:'highpass',f:7000,g:.15})},

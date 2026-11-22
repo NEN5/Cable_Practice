@@ -12,11 +12,11 @@ function cable(dir){if(S.phase!=='play'||S.paused||dash||cdC>0)return;const [dx,
 function cut(dir){if(S.phase!=='play'||S.paused||dash||cdU>0)return;
  const d=Math.hypot(T.x-P.x,T.y-P.y);
  if(d<=CFG.cut.range){cdU=CFG.cut.cd;endFlight();const [dx,dy]=norm(T.x-P.x,T.y-P.y);P.fx=dx;P.fy=dy;const back=P.r+T.r-2;
-  dash={sx:P.x,sy:P.y,tx:T.x-dx*back,ty:T.y-dy*back,speed:CFG.cut.speed,kind:'cut',hit:true}}
+  dash={sx:P.x,sy:P.y,tx:T.x-dx*back,ty:T.y-dy*back,speed:CFG.cut.speed,kind:'cut',hit:true};sfx('cut')}
  else say(P.x,P.y-24,'No target in range',C.danger)}
 function autoDir(){return Math.hypot(joy.x,joy.y)>.3?norm(joy.x,joy.y):norm(T.x-P.x,T.y-P.y)}
 // Cut Throat lands 3 hits when the dash arrives.
-function arrive(){P.x=dash.tx;P.y=dash.ty;const k=dash.kind;dash=null;if(k==='cut')hitT(3,false)}
+function arrive(){P.x=dash.tx;P.y=dash.ty;const k=dash.kind;dash=null;if(k==='cut'){sfx('cutHit');hitT(3,false)}}
 // Speed from the video's timer test (same distance, same direction): 1 cable 2.04s, 2 cables 1.21s, 3 cables 1.06s, i.e. x1, x1.69, x1.92. The pair gives 1+boost*(sm-1); each cable after the 2nd adds a shrinking extra (ratio 'more'). Aligned cables (sm near 2) get the full effect.
 function extraBoost(sm){let e=0,r=CFG.cable.more;for(let i=3;i<=flN;i++){e+=CFG.cable.boost*Math.pow(r,i-2)}return e*Math.max(0,sm-1)}
 // Grappling hook: the hook travels out first, then anchors at the wall hit. Active anchors are a FIFO queue of 2: a 3rd attach drops the oldest.
@@ -56,7 +56,7 @@ function lose(m){if(streak>0){say(P.x,P.y-44,'Streak lost: '+m,C.danger);streak=
 function bumpStreak(){S.bs=Math.max(S.bs||0,streak);if(streak>S.ms){S.ms=streak;try{localStorage.setItem('cableMasterMaxStreak',S.ms)}catch(e){}}}
 function hitT(n,fly){T.hp-=n;T.hit=now+.35;if(fly)tornado();
  if(T.hp>0){say(T.x,T.y-T.r-8,'-'+n,C.text);return}
- buzz(25);streak++;bumpStreak();const pts=T.pts+Math.min(streak-1,5);S.score+=pts;S.kills++;
+ buzz(25);kf.push({x:T.x,y:T.y,r:T.r,col:T.col,big:T.n!=='Common',t:0});streak++;bumpStreak();const pts=T.pts+Math.min(streak-1,5);S.score+=pts;S.kills++;
  S.coins+=T.coin;try{localStorage.setItem('cableMasterCoins',S.coins)}catch(e){}say(T.x,T.y-20,(T.n==='Common'?'':T.n+' ')+'+'+pts+'  +'+T.coin+'c',T.col);if(streak>1)say(T.x,T.y-44,'Streak x'+streak,C.accent);
  if(S.kills%3===0){makeObs();resolve(P,P.r)}spawnT()}
 function touchCheck(x0,y0,fly){const dx=P.x-x0,dy=P.y-y0,l2=dx*dx+dy*dy,t=l2?clamp(((T.x-x0)*dx+(T.y-y0)*dy)/l2,0,1):0;
@@ -85,4 +85,4 @@ function update(dt){if(S.phase!=='play'||S.paused)return;now+=dt;
  if(T.moving)bounce(T,dt);touchCheck(px0,py0,fly0);
  haz.forEach(h=>{bounce(h,dt);if(!dash&&inv<=0&&segDist(px0,py0,P.x,P.y,h.x,h.y)<P.r+h.r){const fly=cabs.some(c=>c.att);hurt(20,'hit');if(!fly){const [nx,ny]=norm(P.x-h.x,P.y-h.y);P.x+=nx*36;P.y+=ny*36;resolve(P,P.r)}}});
  projStep(dt);
- fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t<.9);tor.forEach(f=>f.t+=dt);tor=tor.filter(f=>f.t<.35);if(cLine){cLine.t-=dt;if(cLine.t<=0)cLine=null}}
+ fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t<.9);kf.forEach(f=>f.t+=dt);kf=kf.filter(f=>f.t<.36);tor.forEach(f=>f.t+=dt);tor=tor.filter(f=>f.t<.35);if(cLine){cLine.t-=dt;if(cLine.t<=0)cLine=null}}

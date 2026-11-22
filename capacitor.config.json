@@ -1,8 +1,8 @@
 {
-  "appId": "com.nen.fannytrainer",
+  "appId": "com.nen.cablemaster",
   "appName": "Cable Master",
   "webDir": "www",
-  "backgroundColor": "#0d1320",
+  "backgroundColor": "#070d0b",
   "android": {
     "allowMixedContent": false
   }
